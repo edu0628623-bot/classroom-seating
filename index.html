@@ -33,6 +33,69 @@ border-radius:6px;
 cursor:pointer;
 }
 
+/* Toggle switch */
+
+.switch{
+position:relative;
+display:inline-block;
+width:52px;
+height:28px;
+margin-left:10px;
+}
+
+.switch input{
+opacity:0;
+width:0;
+height:0;
+}
+
+.slider{
+position:absolute;
+cursor:pointer;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:#cfcfcf;
+border-radius:34px;
+transition:.25s;
+}
+
+.slider:before{
+position:absolute;
+content:"";
+height:22px;
+width:22px;
+left:3px;
+bottom:3px;
+background:white;
+border-radius:50%;
+transition:.25s;
+box-shadow:0 2px 4px rgba(0,0,0,0.25);
+}
+
+input:checked + .slider{
+background:#333;
+}
+
+input:checked + .slider:before{
+transform:translateX(24px);
+}
+
+/* rotate classroom */
+
+.rotate{
+transform:rotate(180deg);
+}
+
+.rotate .student{
+transform:rotate(180deg);
+}
+
+.rotate .seat-number{
+transform:rotate(180deg);
+}
+
 .wrapper{
 display:flex;
 justify-content:center;
@@ -216,24 +279,15 @@ margin:10mm;
 <button onclick="downloadPNG()">Last ned bilde</button>
 <button onclick="printClassroom()">Skriv ut</button>
 <button onclick="exportLayout()">Eksporter oppsett</button>
-
 <input type="file" id="importFile" style="display:none" onchange="importLayout(event)">
 <button onclick="document.getElementById('importFile').click()">Importer oppsett</button>
 
+<span style="margin-left:10px;">Lærerperspektiv</span>
 
-<div style="margin-top:10px">
-
-<input id="layoutName" placeholder="Navn på oppsett (f.eks. Uke 38)">
-
-<button onclick="saveLayout()">Lagre oppsett</button>
-
-<select id="layoutList" onchange="loadLayout()">
-<option value="">Velg oppsett</option>
-</select>
-
-<button onclick="deleteLayout()">Slett oppsett</button>
-
-</div>
+<label class="switch">
+<input type="checkbox" onchange="toggleTeacherView(this)">
+<span class="slider"></span>
+</label>
 
 <div class="wrapper">
 
@@ -248,6 +302,16 @@ margin:10mm;
 <script>
 
 const classroom=document.getElementById("classroom")
+
+function toggleTeacherView(cb){
+
+if(cb.checked){
+classroom.classList.add("rotate")
+}else{
+classroom.classList.remove("rotate")
+}
+
+}
 
 function saveSeating(){
 
