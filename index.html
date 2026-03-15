@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Klasseromplan for 1 STC</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+
+body{
+font-family:Arial;
+background:#f2f2f2;
+text-align:center;
+margin:0;
+}
+
+h1{
+margin:15px;
+}
+
+button{
+padding:10px 16px;
+margin:5px;
+border:none;
+background:#333;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+.wrapper{
+display:flex;
+justify-content:center;
+}
+
+.classroom{
+
+display:grid;
+
+grid-template-columns:
+110px 110px
+40px
+110px 110px 110px
+40px
+110px 110px;
+
+grid-template-rows:
+70px
+70px
+70px
+70px
+70px;
+
+grid-template-areas:
+
+"A1 A2 . . . . . . ."
+"B1 B2 . A3 A4 A5 . A6 A7"
+"C1 C2 . B3 B4 B5 . B6 B7"
+"D1 D2 . C3 C4 C5 . C6 C7"
+"F1 F2 . D3 D4 D5 . D6 D7";
+
+gap:14px;
+
+padding:20px;
+
+background:white;
+
+width:fit-content;
+
+margin:auto;
+
+border:3px solid #333;
+
+transform-origin:center;
+
+}
+
+.seat{
+
+height:70px;
+font-size:18px;
+border:2px solid #444;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+background:#fafafa;
+
+position:relative;
+
+-webkit-print-color-adjust: exact;
+print-color-adjust: exact;
+
+}
+.seat-number{
+
+position:absolute;
+top:4px;
+left:6px;
+font-size:9px;
+color:#555;
+opacity:0.7;
+pointer-events:none;
+
+}
+
+.A{background:#f5d7d7}
+.B{background:#efe3cc}
+.C{background:#cddae5}
+.D{background:#d4e0d7}
+.F{background:#c9d7d9}
+
+.students{
+
+margin-top:30px;
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+
+gap:10px;
+
+max-width:1000px;
+
+margin-left:auto;
+
+margin-right:auto;
+
+}
+
+.student{
+
+background:white;
+
+border:2px solid #444;
+
+padding:8px;
+
+border-radius:6px;
+
+cursor:grab;
+
+}
+
+.selected{
+
+outline:3px solid orange;
+
+}
+
+@media print{
+
+body{
+background:white;
+margin:0;
+padding:0;
+}
+
+button{
+display:none;
+}
+
+#layoutList{
+display:none;
+}
+
+.students{
+display:none;
+}
+
+.wrapper{
+display:flex;
+justify-content:center;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+.classroom{
+
+transform:none !important;
+
+border:2px solid black;
+
+margin:auto;
+
+padding: 20px;
+
+}
+
+}
+
+@page{
+size:A4 landscape;
+margin:10mm;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Klasseromplan 1 STC</h1>
+
+<button onclick="randomSeats()">Tilfeldig</button> 
+<button onclick="resetSeats()">Tilbakestill</button> 
+<button onclick="downloadPNG()">Last ned bilde</button>
+<button onclick="printClassroom()">Skriv ut</button>
+<button onclick="exportLayout()">Eksporter oppsett</button>
+
+<input type="file" id="importFile" style="display:none" onchange="importLayout(event)">
+<button onclick="document.getElementById('importFile').click()">Importer oppsett</button>
+
+
+<div style="margin-top:10px">
+
+<input id="layoutName" placeholder="Navn på oppsett (f.eks. Uke 38)">
+
+<button onclick="saveLayout()">Lagre oppsett</button>
+
+<select id="layoutList" onchange="loadLayout()">
+<option value="">Velg oppsett</option>
+</select>
+
+<button onclick="deleteLayout()">Slett oppsett</button>
+
+</div>
+
+<div class="wrapper">
+
+<div id="classroom" class="classroom"></div>
+
+</div>
+
+<h2></h2>
+
+<div id="students" class="students"></div>
+
+<script>
+
+const classroom=document.getElementById("classroom")
+
+function saveSeating(){
+
+let seating={}
+
+document.querySelectorAll(".seat").forEach(seat=>{
+
+let student=seat.querySelector(".student")
+
+if(student){
+seating[seat.dataset.seat]=student.id
+}
+
+})
+
+localStorage.setItem("classSeating",JSON.stringify(seating))
+
+}
+
+function loadSeating(){
+
+let seating=localStorage.getItem("classSeating")
+
+if(!seating) return
+
+seating=JSON.parse(seating)
+
+Object.keys(seating).forEach(seatId=>{
+
+let seat=document.querySelector(`[data-seat="${seatId}"]`)
+let student=document.getElementById(seating[seatId])
+
+if(seat && student){
+
+seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
+
+seat.appendChild(student)
+
+student.style.background=getComputedStyle(seat).backgroundColor
+
+}
+
+})
+
+}
+
+const studentsDiv=document.getElementById("students")
+ studentsDiv.addEventListener("dragover",function(e){
+e.preventDefault()
+})
+
+studentsDiv.addEventListener("drop",function(e){
+
+e.preventDefault()
+
+const id=e.dataTransfer.getData("text")
+const student=document.getElementById(id)
+
+let seat = student.closest(".seat")
+
+if(seat){
+seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
+}
+
+student.style.background="white"
+
+studentsDiv.appendChild(student)
+
+sortStudents()
+
+saveSeating()
+
+})
+let selectedStudent=null
+
+let zoom=1
+
+
+/* zoom */
+
+document.addEventListener("wheel",function(e){
+
+if(e.ctrlKey){
+
+e.preventDefault()
+
+zoom+=e.deltaY*-0.001
+
+zoom=Math.min(Math.max(.5,zoom),2)
+
+classroom.style.transform="scale("+zoom+")"
+
+}
+
+},{passive:false})
+
+
+
+/* seat structure */
+
+const seats=[
+
+"A1","A2",
+
+"B1","B2","A3","A4","A5","A6","A7",
+
+"C1","C2","B3","B4","B5","B6","B7",
+
+"D1","D2","C3","C4","C5","C6","C7",
+
+"F1","F2","D3","D4","D5","D6","D7"
+
+]
+
+
+seats.forEach(code=>{
+
+let seat=document.createElement("div")
+
+seat.className="seat "+code[0]
+
+seat.style.gridArea=code
+
+seat.dataset.seat=code
+
+seat.innerHTML='<span class="seat-number">'+code+'</span>'
+
+seat.addEventListener("dragover",e=>e.preventDefault())
+
+seat.addEventListener("drop",function(e){
+
+e.preventDefault()
+
+const id=e.dataTransfer.getData("text")
+const draggedStudent=document.getElementById(id)
+
+let originSeat = draggedStudent.closest(".seat")
+let currentStudent=this.querySelector(".student")
+
+// якщо парта порожня
+if(!currentStudent){
+
+this.innerHTML=""
+this.appendChild(draggedStudent)
+
+draggedStudent.style.background=getComputedStyle(this).backgroundColor
+
+}else{
+
+// swap студентів
+originSeat.innerHTML=""
+originSeat.appendChild(currentStudent)
+
+currentStudent.style.background=getComputedStyle(originSeat).backgroundColor
+
+this.innerHTML=""
+this.appendChild(draggedStudent)
+
+draggedStudent.style.background=getComputedStyle(this).backgroundColor
+
+}
+
+document.querySelectorAll(".seat").forEach(s=>{
+
+let number = '<span class="seat-number">'+s.dataset.seat+'</span>'
+
+if(!s.querySelector(".student")){
+s.innerHTML = number
+}else{
+if(!s.querySelector(".seat-number")){
+s.insertAdjacentHTML("afterbegin",number)
+}
+}
+
+})
+saveSeating()
+
+})
+
+seat.onclick=function(){
+
+if(selectedStudent && this.children.length===0){
+
+this.innerText=""
+
+this.appendChild(selectedStudent)
+
+saveSeating()
+
+selectedStudent.style.background=getComputedStyle(this).backgroundColor
+
+selectedStudent.classList.remove("selected")
+
+selectedStudent=null
+
+}
+
+}
+
+classroom.appendChild(seat)
+
+})
+
+
+/* create students */
+
+const studentNames=[
+
+"Fares",
+"Isak",
+"Ingrid",
+"Tony",
+"Linea",
+"Jean",
+"Eline",
+"Noah G",
+"Jonas",
+"Hedda",
+"Elise",
+"Mariell",
+"Nicolas",
+"Quang",
+"Mia",
+"Solyana",
+"Christian",
+"Caroline",
+"Alexandra",
+"Otto",
+"Oskar",
+"Estella",
+"Noah R",
+"Theodor",
+"Davyd",
+"Maria",
+"Julia",
+"Daniel"
+
+]
+studentNames.forEach((name,i)=>{
+
+let student=document.createElement("div")
+
+student.className="student"
+student.id="student"+(i+1)
+
+student.innerText=name
+
+student.draggable=true
+
+student.addEventListener("dragstart",function(e){
+e.dataTransfer.setData("text",e.target.id)
+})
+
+student.onclick=function(){
+
+if(selectedStudent){
+selectedStudent.classList.remove("selected")
+}
+
+selectedStudent=this
+this.classList.add("selected")
+
+}
+
+student.ondblclick=function(){
+
+let newName = prompt("Rediger navn:", this.innerText)
+
+if(newName && newName.trim() !== ""){
+
+this.innerText = newName.trim()
+
+saveSeating()
+
+}
+
+}
+
+studentsDiv.appendChild(student)
+
+})
+
+
+/* random */
+
+function randomSeats(){
+
+let seats=document.querySelectorAll(".seat")
+let students=[...document.querySelectorAll(".student")]
+
+/* повертаємо всіх учнів вниз */
+
+students.forEach(s=>{
+s.style.background="white"
+studentsDiv.appendChild(s)
+})
+
+/* перемішуємо */
+
+let shuffled=[...students].sort(()=>Math.random()-0.5)
+
+/* очищаємо всі парти */
+
+seats.forEach(seat=>{
+seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
+})
+
+/* садимо учнів */
+
+seats.forEach((seat,i)=>{
+
+if(shuffled[i]){
+
+seat.appendChild(shuffled[i])
+
+shuffled[i].style.background=getComputedStyle(seat).backgroundColor
+
+}
+
+})
+
+saveSeating()
+
+}
+
+
+/* reset */
+
+function resetSeats(){
+
+let students=document.querySelectorAll(".student")
+
+students.forEach(s=>{
+
+s.style.background="white"
+
+studentsDiv.appendChild(s)
+
+sortStudents()
+
+})
+
+document.querySelectorAll(".seat").forEach(seat=>{
+
+seat.innerText=seat.dataset.seat
+
+})
+
+saveSeating()
+
+}
+
+
+/* pdf */
+
+function downloadPNG(){
+
+let element=document.getElementById("classroom")
+
+html2canvas(element,{
+
+scale:5,
+useCORS:true,
+backgroundColor:"#ffffff"
+
+}).then(canvas=>{
+
+let link=document.createElement("a")
+
+link.download="klasseromplan.png"
+
+link.href=canvas.toDataURL("image/png")
+
+link.click()
+
+})
+
+}
+
+function printClassroom(){
+window.print()
+}
+
+loadSeating()
+
+function saveLayout(){
+
+let name=document.getElementById("layoutName").value.trim()
+
+if(!name){
+alert("Skriv navn på oppsettet")
+return
+}
+
+let seating={}
+
+document.querySelectorAll(".seat").forEach(seat=>{
+
+let student=seat.querySelector(".student")
+
+if(student){
+seating[seat.dataset.seat]=student.id
+}
+
+})
+
+let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
+
+layouts[name]=seating
+
+localStorage.setItem("classLayouts",JSON.stringify(layouts))
+
+updateLayoutList()
+
+document.getElementById("layoutName").value=""
+
+}
+
+function loadLayout(){
+
+let name=document.getElementById("layoutList").value
+
+if(!name) return
+
+let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
+
+let seating=layouts[name]
+
+resetSeats()
+
+Object.keys(seating).forEach(seatId=>{
+
+let seat=document.querySelector(`[data-seat="${seatId}"]`)
+let student=document.getElementById(seating[seatId])
+
+if(seat && student){
+
+seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
+
+seat.appendChild(student)
+
+student.style.background=getComputedStyle(seat).backgroundColor
+
+}
+
+})
+
+saveSeating()
+
+}
+
+function updateLayoutList(){
+
+let list=document.getElementById("layoutList")
+
+let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
+
+list.innerHTML='<option value="">Velg oppsett</option>'
+
+Object.keys(layouts).forEach(name=>{
+
+let option=document.createElement("option")
+
+option.value=name
+option.textContent=name
+
+list.appendChild(option)
+
+})
+
+}
+
+updateLayoutList()
+
+function deleteLayout(){
+
+let name=document.getElementById("layoutList").value
+
+if(!name){
+alert("Velg et oppsett først")
+return
+}
+
+let confirmDelete = confirm("Er du sikker på at du vil slette oppsettet '" + name + "'?")
+
+if(!confirmDelete){
+return
+}
+
+let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
+
+delete layouts[name]
+
+localStorage.setItem("classLayouts",JSON.stringify(layouts))
+
+updateLayoutList()
+
+resetSeats()
+
+}
+
+function sortStudents(){
+
+let students=[...document.querySelectorAll("#students .student")]
+
+students.sort((a,b)=>a.innerText.localeCompare(b.innerText))
+
+students.forEach(s=>studentsDiv.appendChild(s))
+
+}
+
+function exportLayout(){
+
+let seating={}
+
+document.querySelectorAll(".seat").forEach(seat=>{
+
+let student=seat.querySelector(".student")
+
+if(student){
+seating[seat.dataset.seat]=student.innerText
+}
+
+})
+
+let data = JSON.stringify(seating)
+
+let blob = new Blob([data],{type:"application/json"})
+
+let link = document.createElement("a")
+
+link.href = URL.createObjectURL(blob)
+
+link.download = "classroom-layout.json"
+
+link.click()
+
+}
+
+function importLayout(event){
+
+let file = event.target.files[0]
+
+if(!file) return
+
+let reader = new FileReader()
+
+reader.onload = function(e){
+
+let seating = JSON.parse(e.target.result)
+
+resetSeats()
+
+Object.keys(seating).forEach(seatId=>{
+
+let seat=document.querySelector(`[data-seat="${seatId}"]`)
+
+let student=[...document.querySelectorAll(".student")]
+.find(s=>s.innerText===seating[seatId])
+
+if(seat && student){
+
+seat.appendChild(student)
+
+student.style.background=getComputedStyle(seat).backgroundColor
+
+}
+
+})
+
+saveSeating()
+
+}
+
+reader.readAsText(file)
+
+}
+
+</script>
+
+</body>
+</html>
