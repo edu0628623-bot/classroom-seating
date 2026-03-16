@@ -1,906 +1,1689 @@
 <!DOCTYPE html>
-
-<html lang="en">
+<html lang="nb">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Klasseromplan for 1 STC</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-
-body{
-font-family:Arial;
-background:#f2f2f2;
-text-align:center;
-margin:0;
-}
-
-h1{
-margin:15px;
-}
-
-button{
-padding:10px 16px;
-margin:5px;
-border:none;
-background:#333;
-color:white;
-border-radius:6px;
-cursor:pointer;
-}
-
-/* Toggle switch */
-
-.switch{
-position:relative;
-display:inline-block;
-width:52px;
-height:28px;
-margin-left:10px;
-}
-
-.switch input{
-opacity:0;
-width:0;
-height:0;
-}
-
-.slider{
-position:absolute;
-cursor:pointer;
-top:0;
-left:0;
-right:0;
-bottom:0;
-background:#cfcfcf;
-border-radius:34px;
-transition:.25s;
-}
-
-.slider:before{
-position:absolute;
-content:"";
-height:22px;
-width:22px;
-left:3px;
-bottom:3px;
-background:white;
-border-radius:50%;
-transition:.25s;
-box-shadow:0 2px 4px rgba(0,0,0,0.25);
-}
-
-input:checked + .slider{
-background:#333;
-}
-
-input:checked + .slider:before{
-transform:translateX(24px);
-}
-
-/* rotate classroom */
-
-.rotate{
-transform:rotate(180deg);
-}
-
-.rotate .student{
-transform:rotate(180deg);
-}
-
-.rotate .seat-number{
-transform:rotate(180deg);
-}
-
-.wrapper{
-display:flex;
-justify-content:center;
-}
-
-.classroom{
-
-display:grid;
-
-grid-template-columns:
-110px 110px
-40px
-110px 110px 110px
-40px
-110px 110px;
-
-grid-template-rows:
-70px
-70px
-70px
-70px
-70px;
-
-grid-template-areas:
-
-"A1 A2 . . . . . . ."
-"B1 B2 . A3 A4 A5 . A6 A7"
-"C1 C2 . B3 B4 B5 . B6 B7"
-"D1 D2 . C3 C4 C5 . C6 C7"
-"F1 F2 . D3 D4 D5 . D6 D7";
-
-gap:14px;
-
-padding:20px;
-
-background:white;
-
-width:fit-content;
-
-margin:auto;
-
-border:3px solid #333;
-
-transform-origin:center;
-
-}
-
-.seat{
-
-height:70px;
-font-size:18px;
-border:2px solid #444;
-border-radius:8px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-background:#fafafa;
-
-position:relative;
-
--webkit-print-color-adjust: exact;
-print-color-adjust: exact;
-
-}
-.seat-number{
-
-position:absolute;
-top:4px;
-left:6px;
-font-size:9px;
-color:#555;
-opacity:0.7;
-pointer-events:none;
-
-}
-
-.A{background:#f5d7d7}
-.B{background:#efe3cc}
-.C{background:#cddae5}
-.D{background:#d4e0d7}
-.F{background:#c9d7d9}
-
-.students{
-
-margin-top:30px;
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-
-gap:10px;
-
-max-width:1000px;
-
-margin-left:auto;
-
-margin-right:auto;
-
-}
-
-.student{
-
-background:white;
-
-border:2px solid #444;
-
-padding:8px;
-
-border-radius:6px;
-
-cursor:grab;
-
-}
-
-.selected{
-
-outline:3px solid orange;
-
-}
-
-@media print{
-
-body{
-background:white;
-margin:0;
-padding:0;
-}
-
-button{
-display:none;
-}
-
-.switch{
-display:none;
-}
-
-span:has(+ .switch){
-display:none;
-}
-
-#layoutList{
-display:none;
-}
-
-.students{
-display:none;
-}
-
-.wrapper{
-display:flex;
-justify-content:center;
-}
-
-h1{
-text-align:center;
-margin-bottom:20px;
-}
-
-.classroom{
-
-transform:none !important;
-
-border:2px solid black;
-
-margin:auto;
-
-padding: 20px;
-
-}
-
-}
-
-@page{
-size:A4 landscape;
-margin:10mm;
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klasseromplan for 1 STC</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --seat-width: 110px;
+      --seat-height: 70px;
+      --aisle-width: 40px;
+      --classroom-gap: 14px;
+      --classroom-padding: 20px;
+      --seat-font-size: 18px;
+      --seat-number-size: 9px;
+      --teacher-row-height: 74px;
+      --teacher-desk-height: 64px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0 0 40px;
+      background: #f2f2f2;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 20px 16px 6px;
+    }
+
+    h2 {
+      margin: 30px 0 10px;
+    }
+
+    .week-display {
+      min-height: 22px;
+      margin: 0 16px 16px;
+      color: #666;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    button,
+    .help-button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 999px;
+      background: #333;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #9a9a9a;
+      cursor: not-allowed;
+    }
+
+    .controls {
+      display: grid;
+      gap: 12px;
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto 16px;
+      padding: 6px 0;
+    }
+
+    .controls-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .controls-group-main button {
+      min-width: 148px;
+    }
+
+    .controls-group-export button {
+      min-width: 168px;
+    }
+
+    .controls-group-tools {
+      align-items: center;
+    }
+
+    .meta-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      background: #f8f8f8;
+    }
+
+    .meta-label {
+      color: #333;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .meta-input {
+      width: 140px;
+      padding: 8px 12px;
+      border: 1px solid #cfcfcf;
+      border-radius: 999px;
+      background: white;
+      color: #222;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      background: #f8f8f8;
+    }
+
+    .view-toggle-label {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+      margin-left: 10px;
+    }
+
+    .switch input {
+      width: 0;
+      height: 0;
+      opacity: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 34px;
+      background: #cfcfcf;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      bottom: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      transition: 0.25s;
+    }
+
+    .switch input:checked + .slider {
+      background: #333;
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(24px);
+    }
+
+    .rotate {
+      transform: rotate(180deg);
+    }
+
+    .rotate .student,
+    .rotate .seat-number,
+    .rotate .teacher-desk {
+      transform: rotate(180deg);
+    }
+
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      padding: 8px 12px 14px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .classroom {
+      display: grid;
+      grid-template-columns:
+        var(--seat-width) var(--seat-width)
+        var(--aisle-width)
+        var(--seat-width) var(--seat-width) var(--seat-width)
+        var(--aisle-width)
+        var(--seat-width) var(--seat-width);
+      grid-template-rows:
+        var(--teacher-row-height)
+        var(--seat-height)
+        var(--seat-height)
+        var(--seat-height)
+        var(--seat-height)
+        var(--seat-height);
+      grid-template-areas:
+        ". . . T T T . . ."
+        "A1 A2 . . . . . . ."
+        "B1 B2 . A3 A4 A5 . A6 A7"
+        "C1 C2 . B3 B4 B5 . B6 B7"
+        "D1 D2 . C3 C4 C5 . C6 C7"
+        "F1 F2 . D3 D4 D5 . D6 D7";
+      gap: var(--classroom-gap);
+      width: fit-content;
+      margin: auto;
+      padding: var(--classroom-padding);
+      border: 3px solid #333;
+      background: white;
+      transform-origin: center;
+    }
+
+    .seat {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: var(--seat-height);
+      border: 2px solid #444;
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: var(--seat-font-size);
+      font-weight: bold;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .seat.locked-seat {
+      border-color: #c62828;
+      box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.18);
+    }
+
+    .seat-number {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      color: #555;
+      font-size: var(--seat-number-size);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .teacher-desk {
+      grid-area: T;
+      justify-self: center;
+      align-self: end;
+      width: 80%;
+      height: var(--teacher-desk-height);
+      margin-bottom: -6px;
+      padding: 0 14px;
+      border: 2px solid #2f3a48;
+      border-radius: 14px;
+      background: #edf3f8;
+      color: #1f2933;
+      font-size: calc(var(--seat-font-size) + 1px);
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .A {
+      background: #f5d7d7;
+    }
+
+    .B {
+      background: #efe3cc;
+    }
+
+    .C {
+      background: #cddae5;
+    }
+
+    .D {
+      background: #d4e0d7;
+    }
+
+    .F {
+      background: #c9d7d9;
+    }
+
+    .students {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      align-content: start;
+      width: min(1000px, calc(100% - 40px));
+      max-width: 1000px;
+      min-height: 96px;
+      margin: 30px auto 0;
+      padding: 14px;
+      border: 2px dashed #999;
+      border-radius: 10px;
+      background: white;
+    }
+
+    .students:empty::before {
+      content: "Trekk elever hit";
+      align-self: center;
+      justify-self: center;
+      color: #666;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .students.drag-over {
+      border-color: #333;
+      background: #f7f7f7;
+    }
+
+    .student {
+      padding: 10px 8px;
+      border: 2px solid #444;
+      border-radius: 8px;
+      background: white;
+      text-align: center;
+      line-height: 1.15;
+      cursor: grab;
+    }
+
+    .selected {
+      outline: 3px solid orange;
+    }
+
+    .help-section {
+      width: min(1000px, calc(100% - 32px));
+      margin: 28px auto 0;
+      text-align: left;
+    }
+
+    .help-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      list-style: none;
+    }
+
+    .help-button::-webkit-details-marker {
+      display: none;
+    }
+
+    .help-button::after {
+      content: "+";
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .help-section[open] .help-button::after {
+      content: "-";
+    }
+
+    .help-panel {
+      margin-top: 12px;
+      padding: 16px 18px;
+      border: 1px solid #d7d7d7;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .help-panel h3 {
+      margin: 0 0 10px;
+    }
+
+    .help-panel p {
+      margin: 0 0 10px;
+      line-height: 1.5;
+    }
+
+    .help-panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .export-page {
+      position: fixed;
+      top: 0;
+      left: -10000px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 26px;
+      width: 1123px;
+      height: 794px;
+      padding: 44px 52px;
+      background: white;
+      font-family: Arial, sans-serif;
+      pointer-events: none;
+    }
+
+    .export-title {
+      margin: 0;
+      color: #111;
+      font-size: 34px;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    .export-subtitle {
+      margin: -10px 0 0;
+      color: #555;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .export-stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .export-classroom {
+      --seat-width: 104px;
+      --seat-height: 66px;
+      --aisle-width: 34px;
+      --classroom-gap: 12px;
+      --classroom-padding: 18px;
+      --seat-font-size: 17px;
+      --seat-number-size: 9px;
+      --teacher-row-height: 70px;
+      --teacher-desk-height: 60px;
+      margin: 0;
+      border: 2px solid #222;
+      box-shadow: none;
+    }
+
+    .export-classroom .student {
+      cursor: default;
+    }
+
+    @media (max-width: 900px) {
+      :root {
+        --seat-width: 96px;
+        --seat-height: 64px;
+        --aisle-width: 28px;
+        --classroom-gap: 10px;
+        --classroom-padding: 16px;
+        --seat-font-size: 16px;
+        --teacher-row-height: 64px;
+        --teacher-desk-height: 56px;
+      }
+
+      .controls {
+        width: calc(100% - 24px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      :root {
+        --seat-width: 78px;
+        --seat-height: 56px;
+        --aisle-width: 20px;
+        --classroom-gap: 8px;
+        --classroom-padding: 12px;
+        --seat-font-size: 13px;
+        --seat-number-size: 8px;
+        --teacher-row-height: 56px;
+        --teacher-desk-height: 48px;
+      }
+
+      h1 {
+        margin: 18px 14px 10px;
+        font-size: 28px;
+      }
+
+      button,
+      .help-button {
+        justify-content: center;
+        flex: 1 1 calc(50% - 10px);
+        min-height: 46px;
+      }
+
+      .controls {
+        width: calc(100% - 20px);
+        padding: 12px;
+      }
+
+      .controls-group {
+        justify-content: stretch;
+      }
+
+      .controls-group button,
+      .meta-control,
+      .meta-input,
+      .view-toggle {
+        width: 100%;
+      }
+
+      .meta-control {
+        flex-direction: column;
+        border-radius: 16px;
+      }
+
+      .students {
+        width: calc(100% - 20px);
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      }
+
+      .help-section {
+        width: calc(100% - 20px);
+      }
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: white;
+      }
+
+      .controls,
+      .help-section,
+      .students,
+      h2 {
+        display: none;
+      }
+
+      .wrapper {
+        width: 100%;
+        padding: 0;
+        overflow: visible;
+      }
+
+      h1 {
+        width: 100%;
+        margin: 0 0 2mm;
+        text-align: center;
+      }
+
+      .week-display {
+        margin: 0 0 8mm;
+        color: #333;
+        font-size: 18px;
+      }
+
+      .classroom {
+        margin: 0 auto;
+        padding: 20px;
+        border: 2px solid black;
+        transform: none !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .classroom.rotate {
+        transform: rotate(180deg) !important;
+      }
+
+      .classroom.rotate .student,
+      .classroom.rotate .seat-number,
+      .classroom.rotate .teacher-desk {
+        transform: rotate(180deg) !important;
+      }
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+  </style>
 </head>
-
 <body>
-
-<h1>Klasseromplan 1 STC</h1>
-
-<button onclick="randomSeats()">Tilfeldig</button> 
-<button onclick="resetSeats()">Tilbakestill</button> 
-<button onclick="downloadPNG()">Last ned bilde</button>
-<button onclick="printClassroom()">Skriv ut</button>
-<button onclick="exportLayout()">Eksporter oppsett</button>
-<input type="file" id="importFile" style="display:none" onchange="importLayout(event)">
-<button onclick="document.getElementById('importFile').click()">Importer oppsett</button>
-
-<span style="margin-left:10px;">Lærerperspektiv</span>
-
-<label class="switch">
-<input type="checkbox" onchange="toggleTeacherView(this)">
-<span class="slider"></span>
-</label>
-
-<div class="wrapper">
-
-<div id="classroom" class="classroom"></div>
-
-</div>
-
-<h2></h2>
-
-<div id="students" class="students"></div>
-
-<script>
-
-const classroom=document.getElementById("classroom")
-
-function toggleTeacherView(cb){
-
-if(cb.checked){
-classroom.classList.add("rotate")
-}else{
-classroom.classList.remove("rotate")
-}
-
-}
-
-function saveSeating(){
-
-let seating={}
-
-document.querySelectorAll(".seat").forEach(seat=>{
-
-let student=seat.querySelector(".student")
-
-if(student){
-seating[seat.dataset.seat]=student.id
-}
-
-})
-
-localStorage.setItem("classSeating",JSON.stringify(seating))
-
-}
-
-function loadSeating(){
-
-let seating=localStorage.getItem("classSeating")
-
-if(!seating) return
-
-seating=JSON.parse(seating)
-
-Object.keys(seating).forEach(seatId=>{
-
-let seat=document.querySelector(`[data-seat="${seatId}"]`)
-let student=document.getElementById(seating[seatId])
-
-if(seat && student){
-
-seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
-
-seat.appendChild(student)
-
-student.style.background=getComputedStyle(seat).backgroundColor
-
-}
-
-})
-
-}
-
-const studentsDiv=document.getElementById("students")
- studentsDiv.addEventListener("dragover",function(e){
-e.preventDefault()
-})
-
-studentsDiv.addEventListener("drop",function(e){
-
-e.preventDefault()
-
-const id=e.dataTransfer.getData("text")
-const student=document.getElementById(id)
-
-let seat = student.closest(".seat")
-
-if(seat){
-seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
-}
-
-student.style.background="white"
-
-studentsDiv.appendChild(student)
-
-sortStudents()
-
-saveSeating()
-
-})
-let selectedStudent=null
-
-let zoom=1
-
-
-/* zoom */
-
-document.addEventListener("wheel",function(e){
-
-if(e.ctrlKey){
-
-e.preventDefault()
-
-zoom+=e.deltaY*-0.001
-
-zoom=Math.min(Math.max(.5,zoom),2)
-
-classroom.style.transform="scale("+zoom+")"
-
-}
-
-},{passive:false})
-
-
-
-/* seat structure */
-
-const seats=[
-
-"A1","A2",
-
-"B1","B2","A3","A4","A5","A6","A7",
-
-"C1","C2","B3","B4","B5","B6","B7",
-
-"D1","D2","C3","C4","C5","C6","C7",
-
-"F1","F2","D3","D4","D5","D6","D7"
-
-]
-
-
-seats.forEach(code=>{
-
-let seat=document.createElement("div")
-
-seat.className="seat "+code[0]
-
-seat.style.gridArea=code
-
-seat.dataset.seat=code
-
-seat.innerHTML='<span class="seat-number">'+code+'</span>'
-
-seat.addEventListener("dragover",e=>e.preventDefault())
-
-seat.addEventListener("drop",function(e){
-
-e.preventDefault()
-
-const id=e.dataTransfer.getData("text")
-const draggedStudent=document.getElementById(id)
-
-let originSeat = draggedStudent.closest(".seat")
-let currentStudent=this.querySelector(".student")
-
-// якщо парта порожня
-if(!currentStudent){
-
-this.innerHTML=""
-this.appendChild(draggedStudent)
-
-draggedStudent.style.background=getComputedStyle(this).backgroundColor
-
-}else{
-
-// swap студентів
-originSeat.innerHTML=""
-originSeat.appendChild(currentStudent)
-
-currentStudent.style.background=getComputedStyle(originSeat).backgroundColor
-
-this.innerHTML=""
-this.appendChild(draggedStudent)
-
-draggedStudent.style.background=getComputedStyle(this).backgroundColor
-
-}
-
-document.querySelectorAll(".seat").forEach(s=>{
-
-let number = '<span class="seat-number">'+s.dataset.seat+'</span>'
-
-if(!s.querySelector(".student")){
-s.innerHTML = number
-}else{
-if(!s.querySelector(".seat-number")){
-s.insertAdjacentHTML("afterbegin",number)
-}
-}
-
-})
-saveSeating()
-
-})
-
-seat.onclick=function(){
-
-if(selectedStudent && this.children.length===0){
-
-this.innerText=""
-
-this.appendChild(selectedStudent)
-
-saveSeating()
-
-selectedStudent.style.background=getComputedStyle(this).backgroundColor
-
-selectedStudent.classList.remove("selected")
-
-selectedStudent=null
-
-}
-
-}
-
-classroom.appendChild(seat)
-
-})
-
-
-/* create students */
-
-const studentNames=[
-
-"Fares",
-"Isak",
-"Ingrid",
-"Tony",
-"Linea",
-"Jean",
-"Eline",
-"Noah G",
-"Jonas",
-"Hedda",
-"Elise",
-"Mariell",
-"Nicolas",
-"Quang",
-"Mia",
-"Solyana",
-"Christian",
-"Caroline",
-"Alexandra",
-"Otto",
-"Oskar",
-"Estella",
-"Noah R",
-"Theodor",
-"Davyd",
-"Maria",
-"Julia",
-"Daniel"
-
-]
-studentNames.forEach((name,i)=>{
-
-let student=document.createElement("div")
-
-student.className="student"
-student.id="student"+(i+1)
-
-student.innerText=name
-
-student.draggable=true
-
-student.addEventListener("dragstart",function(e){
-e.dataTransfer.setData("text",e.target.id)
-})
-
-student.onclick=function(){
-
-if(selectedStudent){
-selectedStudent.classList.remove("selected")
-}
-
-selectedStudent=this
-this.classList.add("selected")
-
-}
-
-student.ondblclick=function(){
-
-let newName = prompt("Rediger navn:", this.innerText)
-
-if(newName && newName.trim() !== ""){
-
-this.innerText = newName.trim()
-
-saveSeating()
-
-}
-
-}
-
-studentsDiv.appendChild(student)
-
-})
-
-
-/* random */
-
-function randomSeats(){
-
-let seats=document.querySelectorAll(".seat")
-let students=[...document.querySelectorAll(".student")]
-
-/* повертаємо всіх учнів вниз */
-
-students.forEach(s=>{
-s.style.background="white"
-studentsDiv.appendChild(s)
-})
-
-/* перемішуємо */
-
-let shuffled=[...students].sort(()=>Math.random()-0.5)
-
-/* очищаємо всі парти */
-
-seats.forEach(seat=>{
-seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
-})
-
-/* садимо учнів */
-
-seats.forEach((seat,i)=>{
-
-if(shuffled[i]){
-
-seat.appendChild(shuffled[i])
-
-shuffled[i].style.background=getComputedStyle(seat).backgroundColor
-
-}
-
-})
-
-saveSeating()
-
-}
-
-
-/* reset */
-
-function resetSeats(){
-
-let students=document.querySelectorAll(".student")
-
-students.forEach(s=>{
-
-s.style.background="white"
-
-studentsDiv.appendChild(s)
-
-sortStudents()
-
-})
-
-document.querySelectorAll(".seat").forEach(seat=>{
-
-seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
-
-})
-
-saveSeating()
-
-}
-
-
-/* pdf */
-
-function downloadPNG(){
-
-let element=document.getElementById("classroom")
-
-html2canvas(element,{
-
-scale:5,
-useCORS:true,
-backgroundColor:"#ffffff"
-
-}).then(canvas=>{
-
-let link=document.createElement("a")
-
-link.download="klasseromplan.png"
-
-link.href=canvas.toDataURL("image/png")
-
-link.click()
-
-})
-
-}
-
-function printClassroom(){
-window.print()
-}
-
-loadSeating()
-
-function saveLayout(){
-
-let name=document.getElementById("layoutName").value.trim()
-
-if(!name){
-alert("Skriv navn på oppsettet")
-return
-}
-
-let seating={}
-
-document.querySelectorAll(".seat").forEach(seat=>{
-
-let student=seat.querySelector(".student")
-
-if(student){
-seating[seat.dataset.seat]=student.id
-}
-
-})
-
-let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
-
-layouts[name]=seating
-
-localStorage.setItem("classLayouts",JSON.stringify(layouts))
-
-updateLayoutList()
-
-document.getElementById("layoutName").value=""
-
-}
-
-function loadLayout(){
-
-let name=document.getElementById("layoutList").value
-
-if(!name) return
-
-let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
-
-let seating=layouts[name]
-
-resetSeats()
-
-Object.keys(seating).forEach(seatId=>{
-
-let seat=document.querySelector(`[data-seat="${seatId}"]`)
-let student=document.getElementById(seating[seatId])
-
-if(seat && student){
-
-seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
-
-seat.appendChild(student)
-
-student.style.background=getComputedStyle(seat).backgroundColor
-
-}
-
-})
-
-saveSeating()
-
-}
-
-function updateLayoutList(){
-
-let list=document.getElementById("layoutList")
-
-let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
-
-list.innerHTML='<option value="">Velg oppsett</option>'
-
-Object.keys(layouts).forEach(name=>{
-
-let option=document.createElement("option")
-
-option.value=name
-option.textContent=name
-
-list.appendChild(option)
-
-})
-
-}
-
-updateLayoutList()
-
-function deleteLayout(){
-
-let name=document.getElementById("layoutList").value
-
-if(!name){
-alert("Velg et oppsett først")
-return
-}
-
-let confirmDelete = confirm("Er du sikker på at du vil slette oppsettet '" + name + "'?")
-
-if(!confirmDelete){
-return
-}
-
-let layouts=JSON.parse(localStorage.getItem("classLayouts") || "{}")
-
-delete layouts[name]
-
-localStorage.setItem("classLayouts",JSON.stringify(layouts))
-
-updateLayoutList()
-
-resetSeats()
-
-}
-
-function sortStudents(){
-
-let students=[...document.querySelectorAll("#students .student")]
-
-students.sort((a,b)=>a.innerText.localeCompare(b.innerText))
-
-students.forEach(s=>studentsDiv.appendChild(s))
-
-}
-
-function exportLayout(){
-
-let seating={}
-
-document.querySelectorAll(".seat").forEach(seat=>{
-
-let student=seat.querySelector(".student")
-
-if(student){
-seating[seat.dataset.seat]=student.innerText
-}
-
-})
-
-let data = JSON.stringify(seating)
-
-let blob = new Blob([data],{type:"application/json"})
-
-let link = document.createElement("a")
-
-link.href = URL.createObjectURL(blob)
-
-link.download = "classroom-layout.json"
-
-link.click()
-
-}
-
-function importLayout(event){
-
-let file = event.target.files[0]
-
-if(!file) return
-
-let reader = new FileReader()
-
-reader.onload = function(e){
-
-let seating = JSON.parse(e.target.result)
-
-resetSeats()
-
-Object.keys(seating).forEach(seatId=>{
-
-let seat=document.querySelector(`[data-seat="${seatId}"]`)
-
-let student=[...document.querySelectorAll(".student")]
-.find(s=>s.innerText===seating[seatId])
-
-if(seat && student){
-
-seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
-
-seat.appendChild(student)
-
-student.style.background=getComputedStyle(seat).backgroundColor
-
-}
-
-})
-
-saveSeating()
-
-}
-
-reader.readAsText(file)
-
-}
-
-</script>
-
+  <h1 id="classTitle">Klasseromplan 1 STC</h1>
+  <p id="weekDisplay" class="week-display" hidden></p>
+
+  <div class="controls">
+    <div class="controls-group controls-group-main">
+      <button id="randomButton" type="button">Tilfeldig</button>
+      <button id="resetButton" type="button">Tilbakestill</button>
+      <button id="undoButton" type="button" disabled>Angre siste handling</button>
+    </div>
+
+    <div class="controls-group controls-group-export">
+      <button id="downloadButton" type="button">Last ned bilde A4</button>
+      <button id="printButton" type="button">Skriv ut</button>
+      <button id="exportButton" type="button">Eksporter oppsett</button>
+      <input id="importFile" type="file" accept=".json,application/json" hidden>
+      <button id="importButton" type="button">Importer oppsett</button>
+    </div>
+
+    <div class="controls-group controls-group-tools">
+      <div class="meta-control">
+        <label class="meta-label" for="weekInput">Uke</label>
+        <input id="weekInput" class="meta-input" type="text" maxlength="30">
+      </div>
+
+      <div class="view-toggle">
+        <span class="view-toggle-label">L&aelig;rerperspektiv</span>
+        <label class="switch">
+          <input id="teacherViewToggle" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <div id="classroom" class="classroom"></div>
+  </div>
+
+  <h2>Elever uten plass</h2>
+  <div id="students" class="students"></div>
+
+  <details class="help-section">
+    <summary class="help-button">Hvordan bruke import og eksport</summary>
+    <div class="help-panel">
+      <h3>Kort guide</h3>
+      <p>Trykk <strong>Eksporter oppsett</strong> for &aring; lagre plassering som en JSON-fil.</p>
+      <p>Trykk <strong>Importer oppsett</strong> for &aring; velge en tidligere eksportert fil fra PC eller mobil og laste den inn igjen.</p>
+    </div>
+  </details>
+
+  <script>
+    const STORAGE_KEYS = {
+      seating: "classSeating",
+      appState: "classroomAppState",
+      lockedStudents: "classLockedStudents",
+      weekLabel: "classWeekLabel"
+    };
+
+    const DEFAULT_TEACHER_LABEL = "L\u00E6rer";
+    const SEAT_CODES = [
+      "A1", "A2",
+      "B1", "B2", "A3", "A4", "A5", "A6", "A7",
+      "C1", "C2", "B3", "B4", "B5", "B6", "B7",
+      "D1", "D2", "C3", "C4", "C5", "C6", "C7",
+      "F1", "F2", "D3", "D4", "D5", "D6", "D7"
+    ];
+    const DEFAULT_STUDENT_NAMES = [
+      "Fares",
+      "Isak",
+      "Ingrid",
+      "Tony",
+      "Linea",
+      "Jean",
+      "Eline",
+      "Noah G",
+      "Jonas",
+      "Hedda",
+      "Elise",
+      "Mariell",
+      "Nicolas",
+      "Quang",
+      "Mia",
+      "Solyana",
+      "Christian",
+      "Caroline",
+      "Alexandra",
+      "Otto",
+      "Oskar",
+      "Estella",
+      "Noah R",
+      "Theodor",
+      "Davyd",
+      "Maria",
+      "Julia",
+      "Daniel"
+    ];
+    const SEAT_POSITIONS = {
+      A1: { x: 1, y: 1 },
+      A2: { x: 2, y: 1 },
+      B1: { x: 1, y: 2 },
+      B2: { x: 2, y: 2 },
+      A3: { x: 4, y: 2 },
+      A4: { x: 5, y: 2 },
+      A5: { x: 6, y: 2 },
+      A6: { x: 8, y: 2 },
+      A7: { x: 9, y: 2 },
+      C1: { x: 1, y: 3 },
+      C2: { x: 2, y: 3 },
+      B3: { x: 4, y: 3 },
+      B4: { x: 5, y: 3 },
+      B5: { x: 6, y: 3 },
+      B6: { x: 8, y: 3 },
+      B7: { x: 9, y: 3 },
+      D1: { x: 1, y: 4 },
+      D2: { x: 2, y: 4 },
+      C3: { x: 4, y: 4 },
+      C4: { x: 5, y: 4 },
+      C5: { x: 6, y: 4 },
+      C6: { x: 8, y: 4 },
+      C7: { x: 9, y: 4 },
+      F1: { x: 1, y: 5 },
+      F2: { x: 2, y: 5 },
+      D3: { x: 4, y: 5 },
+      D4: { x: 5, y: 5 },
+      D5: { x: 6, y: 5 },
+      D6: { x: 8, y: 5 },
+      D7: { x: 9, y: 5 }
+    };
+    const STUDENT_NAME_ALIASES = {
+      cristian: "christian"
+    };
+    const SPECIAL_PROXIMITY_GROUP = new Set(["otto", "nicolas", "fares", "christian"]);
+    const TALKATIVE_PAIR = new Set(["caroline", "mia"]);
+    const GIRL_NAMES = new Set([
+      "ingrid",
+      "linea",
+      "eline",
+      "hedda",
+      "elise",
+      "mariell",
+      "mia",
+      "solyana",
+      "caroline",
+      "alexandra",
+      "estella",
+      "maria",
+      "julia"
+    ]);
+    const RANDOM_LAYOUT_ATTEMPTS = 450;
+    const MAX_UNDO_STEPS = 30;
+
+    const classroom = document.getElementById("classroom");
+    const studentsDiv = document.getElementById("students");
+    const classTitle = document.getElementById("classTitle");
+    const weekDisplay = document.getElementById("weekDisplay");
+    const weekInput = document.getElementById("weekInput");
+    const importFileInput = document.getElementById("importFile");
+    const teacherViewToggle = document.getElementById("teacherViewToggle");
+    const undoButton = document.getElementById("undoButton");
+    const NEIGHBOR_SEAT_MAP = buildSeatRelationMap((leftSeat, rightSeat) => {
+      const deltaX = Math.abs(leftSeat.x - rightSeat.x);
+      const deltaY = Math.abs(leftSeat.y - rightSeat.y);
+
+      return (deltaY === 0 && deltaX === 1) || (deltaY === 1 && deltaX <= 1);
+    });
+    const SUPPORTIVE_GROUP_MAP = buildSeatRelationMap((leftSeat, rightSeat) => {
+      const deltaX = Math.abs(leftSeat.x - rightSeat.x);
+      const deltaY = Math.abs(leftSeat.y - rightSeat.y);
+
+      return deltaY === 1 && deltaX <= 1;
+    });
+    const SIDE_NEIGHBOR_MAP = buildSeatRelationMap((leftSeat, rightSeat) => {
+      const deltaX = Math.abs(leftSeat.x - rightSeat.x);
+      const deltaY = Math.abs(leftSeat.y - rightSeat.y);
+
+      return deltaY === 0 && deltaX === 1;
+    });
+
+    let selectedStudent = null;
+    let zoom = 1;
+    let isApplyingUndo = false;
+    const undoStack = [];
+
+    function buildSeatRelationMap(predicate) {
+      return SEAT_CODES.reduce((seatMap, seatId) => {
+        seatMap[seatId] = SEAT_CODES.filter(otherSeatId => {
+          if (seatId === otherSeatId) {
+            return false;
+          }
+
+          return predicate(SEAT_POSITIONS[seatId], SEAT_POSITIONS[otherSeatId]);
+        });
+
+        return seatMap;
+      }, {});
+    }
+
+    function normalizeStudentName(name) {
+      return (name || "").trim().toLowerCase();
+    }
+
+    function canonicalStudentName(name) {
+      const normalizedName = normalizeStudentName(name);
+
+      return STUDENT_NAME_ALIASES[normalizedName] || normalizedName;
+    }
+
+    function getStudentName(student) {
+      return student.textContent.trim();
+    }
+
+    function captureCurrentState() {
+      const seating = {};
+      const lockedStudents = [];
+
+      classroom.querySelectorAll(".seat").forEach(seat => {
+        const student = getSeatStudent(seat);
+
+        if (student) {
+          seating[seat.dataset.seat] = student.id;
+        }
+      });
+
+      document.querySelectorAll(".student").forEach(student => {
+        if (isStudentLocked(student)) {
+          lockedStudents.push(student.id);
+        }
+      });
+
+      return { seating, lockedStudents };
+    }
+
+    function updateUndoButton() {
+      undoButton.disabled = undoStack.length === 0;
+    }
+
+    function updateWeekDisplay() {
+      const weekText = weekInput.value.trim();
+
+      weekDisplay.textContent = weekText;
+      weekDisplay.hidden = !weekText;
+      localStorage.setItem(STORAGE_KEYS.weekLabel, weekText);
+    }
+
+    function recordUndoState() {
+      if (isApplyingUndo) {
+        return;
+      }
+
+      const currentState = captureCurrentState();
+      const serializedState = JSON.stringify(currentState);
+      const lastState = undoStack.length ? JSON.stringify(undoStack[undoStack.length - 1]) : null;
+
+      if (serializedState === lastState) {
+        return;
+      }
+
+      undoStack.push(currentState);
+
+      if (undoStack.length > MAX_UNDO_STEPS) {
+        undoStack.shift();
+      }
+
+      updateUndoButton();
+    }
+
+    function applySnapshot(snapshot) {
+      if (!snapshot) {
+        return;
+      }
+
+      isApplyingUndo = true;
+      clearSelectedStudent();
+
+      document.querySelectorAll(".student").forEach(student => {
+        student.dataset.locked = "false";
+        student.style.background = "white";
+        studentsDiv.appendChild(student);
+      });
+
+      classroom.querySelectorAll(".seat").forEach(renderSeatNumber);
+
+      Object.entries(snapshot.seating).forEach(([seatId, studentId]) => {
+        const seat = findSeat(seatId);
+        const student = document.getElementById(studentId);
+
+        if (seat && student) {
+          placeStudentInSeat(student, seat);
+        }
+      });
+
+      snapshot.lockedStudents.forEach(studentId => {
+        const student = document.getElementById(studentId);
+
+        if (student && student.closest(".seat")) {
+          setStudentLocked(student, true);
+        }
+      });
+
+      sortStudents();
+      saveSeating();
+      isApplyingUndo = false;
+      updateUndoButton();
+    }
+
+    function undoLastAction() {
+      const previousState = undoStack.pop();
+
+      applySnapshot(previousState);
+    }
+
+    function getStudentGender(student) {
+      const canonicalName = canonicalStudentName(getStudentName(student));
+
+      if (!canonicalName) {
+        return null;
+      }
+
+      return GIRL_NAMES.has(canonicalName) ? "girl" : "boy";
+    }
+
+    function shuffleArray(items) {
+      const shuffledItems = [...items];
+
+      for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+
+        [shuffledItems[index], shuffledItems[swapIndex]] = [shuffledItems[swapIndex], shuffledItems[index]];
+      }
+
+      return shuffledItems;
+    }
+
+    function scoreSeatArrangement(seatAssignments) {
+      let score = 0;
+      const occupiedSeatIds = [...seatAssignments.keys()];
+      const evaluatedPairs = new Set();
+
+      // Prefer layouts where the target group stays close by vertically/diagonally,
+      // while same-row desk neighbors and weak gender mixing are scored lower.
+      occupiedSeatIds.forEach(seatId => {
+        const student = seatAssignments.get(seatId);
+        const studentGender = getStudentGender(student);
+        const studentName = canonicalStudentName(getStudentName(student));
+        let sameGenderNeighbors = 0;
+        let oppositeGenderNeighbors = 0;
+        let supportiveGroupNeighbors = 0;
+
+        NEIGHBOR_SEAT_MAP[seatId].forEach(neighborSeatId => {
+          const neighbor = seatAssignments.get(neighborSeatId);
+
+          if (!neighbor) {
+            return;
+          }
+
+          const pairKey = [seatId, neighborSeatId].sort().join("|");
+
+          if (!evaluatedPairs.has(pairKey)) {
+            const neighborGender = getStudentGender(neighbor);
+            const neighborName = canonicalStudentName(getStudentName(neighbor));
+
+            if (studentGender && neighborGender) {
+              score += studentGender === neighborGender ? 7 : -3;
+            }
+
+            if (
+              TALKATIVE_PAIR.has(studentName) &&
+              TALKATIVE_PAIR.has(neighborName)
+            ) {
+              score -= 42;
+            }
+
+            evaluatedPairs.add(pairKey);
+          }
+
+          if (studentGender === getStudentGender(neighbor)) {
+            sameGenderNeighbors += 1;
+          } else {
+            oppositeGenderNeighbors += 1;
+          }
+        });
+
+        SUPPORTIVE_GROUP_MAP[seatId].forEach(neighborSeatId => {
+          const neighbor = seatAssignments.get(neighborSeatId);
+
+          if (
+            neighbor &&
+            SPECIAL_PROXIMITY_GROUP.has(studentName) &&
+            SPECIAL_PROXIMITY_GROUP.has(canonicalStudentName(getStudentName(neighbor)))
+          ) {
+            supportiveGroupNeighbors += 1;
+          }
+        });
+
+        if (studentGender) {
+          score += sameGenderNeighbors * 6;
+          score -= oppositeGenderNeighbors;
+
+          if (sameGenderNeighbors === 0 && oppositeGenderNeighbors > 0) {
+            score -= 28;
+          } else if (sameGenderNeighbors > 0) {
+            score += 8;
+          }
+        }
+
+        if (SPECIAL_PROXIMITY_GROUP.has(studentName)) {
+          score += supportiveGroupNeighbors > 0 ? 26 : -18;
+
+          SIDE_NEIGHBOR_MAP[seatId].forEach(neighborSeatId => {
+            const neighbor = seatAssignments.get(neighborSeatId);
+
+            if (
+              neighbor &&
+              SPECIAL_PROXIMITY_GROUP.has(canonicalStudentName(getStudentName(neighbor)))
+            ) {
+              score -= 30;
+            }
+          });
+        }
+      });
+
+      return score;
+    }
+
+    function createBiasedSeatPlan(studentsToPlace, availableSeatIds, lockedSeatAssignments) {
+      const candidates = [];
+
+      for (let attempt = 0; attempt < RANDOM_LAYOUT_ATTEMPTS; attempt += 1) {
+        const shuffledStudents = shuffleArray(studentsToPlace);
+        const shuffledSeatIds = shuffleArray(availableSeatIds);
+        const seatAssignments = new Map(lockedSeatAssignments);
+
+        shuffledStudents.forEach((student, index) => {
+          if (shuffledSeatIds[index]) {
+            seatAssignments.set(shuffledSeatIds[index], student);
+          }
+        });
+
+        candidates.push({
+          score: scoreSeatArrangement(seatAssignments),
+          seatAssignments
+        });
+      }
+
+      candidates.sort((leftCandidate, rightCandidate) => rightCandidate.score - leftCandidate.score);
+
+      const topCandidateCount = Math.max(1, Math.min(12, Math.ceil(candidates.length * 0.08)));
+      const chosenCandidateIndex = Math.floor((Math.random() ** 2) * topCandidateCount);
+
+      return candidates[chosenCandidateIndex].seatAssignments;
+    }
+
+    function chooseSeatIdsToFill(availableSeatIds, studentCount) {
+      const seatIdsByDepth = availableSeatIds.reduce((depthMap, seatId) => {
+        const depth = SEAT_POSITIONS[seatId].y;
+
+        if (!depthMap[depth]) {
+          depthMap[depth] = [];
+        }
+
+        depthMap[depth].push(seatId);
+        return depthMap;
+      }, {});
+
+      return Object.keys(seatIdsByDepth)
+        .map(Number)
+        .sort((leftDepth, rightDepth) => leftDepth - rightDepth)
+        .flatMap(depth => shuffleArray(seatIdsByDepth[depth]))
+        .slice(0, studentCount);
+    }
+
+    function readSavedStudentNames() {
+      try {
+        const savedState = JSON.parse(localStorage.getItem(STORAGE_KEYS.appState) || "null");
+
+        if (!savedState || !Array.isArray(savedState.students) || !savedState.students.length) {
+          return DEFAULT_STUDENT_NAMES;
+        }
+
+        return savedState.students.map(student => student.name).filter(Boolean);
+      } catch (error) {
+        return DEFAULT_STUDENT_NAMES;
+      }
+    }
+
+    function readSavedSeating() {
+      try {
+        const savedSeating = JSON.parse(localStorage.getItem(STORAGE_KEYS.seating) || "null");
+
+        if (savedSeating && typeof savedSeating === "object") {
+          return savedSeating;
+        }
+      } catch (error) {
+        return {};
+      }
+
+      try {
+        const savedState = JSON.parse(localStorage.getItem(STORAGE_KEYS.appState) || "null");
+
+        if (!savedState || !Array.isArray(savedState.students)) {
+          return {};
+        }
+
+        return savedState.students.reduce((accumulator, student) => {
+          if (student && student.seatId && student.id) {
+            accumulator[student.seatId] = student.id;
+          }
+
+          return accumulator;
+        }, {});
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function readSavedLockedStudents() {
+      try {
+        const lockedStudents = JSON.parse(localStorage.getItem(STORAGE_KEYS.lockedStudents) || "[]");
+
+        return Array.isArray(lockedStudents) ? lockedStudents : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function readSavedWeekLabel() {
+      const savedWeekLabel = localStorage.getItem(STORAGE_KEYS.weekLabel);
+
+      if (savedWeekLabel !== null) {
+        return savedWeekLabel;
+      }
+
+      try {
+        const savedState = JSON.parse(localStorage.getItem(STORAGE_KEYS.appState) || "null");
+
+        if (savedState && savedState.week) {
+          return String(savedState.week).trim().startsWith("Uke")
+            ? String(savedState.week).trim()
+            : `Uke ${String(savedState.week).trim()}`;
+        }
+      } catch (error) {
+        return "";
+      }
+
+      return "";
+    }
+
+    function findSeat(seatId) {
+      return classroom.querySelector(`[data-seat="${seatId}"]`);
+    }
+
+    function getSeatStudent(seat) {
+      return seat.querySelector(".student");
+    }
+
+    function isStudentLocked(student) {
+      return student.dataset.locked === "true";
+    }
+
+    function updateSeatLockState(seat) {
+      const student = getSeatStudent(seat);
+
+      seat.classList.toggle("locked-seat", Boolean(student && isStudentLocked(student)));
+    }
+
+    function setStudentLocked(student, locked) {
+      student.dataset.locked = String(locked);
+
+      const seat = student.closest(".seat");
+
+      if (seat) {
+        updateSeatLockState(seat);
+      }
+    }
+
+    function updateClassroomTransform() {
+      const transforms = [];
+
+      if (classroom.classList.contains("rotate")) {
+        transforms.push("rotate(180deg)");
+      }
+
+      if (zoom !== 1) {
+        transforms.push(`scale(${zoom})`);
+      }
+
+      classroom.style.transform = transforms.join(" ");
+    }
+
+    function toggleTeacherView() {
+      classroom.classList.toggle("rotate", teacherViewToggle.checked);
+      updateClassroomTransform();
+    }
+
+    function renderSeatNumber(seat) {
+      seat.classList.remove("locked-seat");
+      seat.innerHTML = `<span class="seat-number">${seat.dataset.seat}</span>`;
+    }
+
+    function clearSelectedStudent() {
+      if (!selectedStudent) {
+        return;
+      }
+
+      selectedStudent.classList.remove("selected");
+      selectedStudent = null;
+    }
+
+    function selectStudent(student) {
+      if (selectedStudent === student) {
+        clearSelectedStudent();
+        return;
+      }
+
+      clearSelectedStudent();
+      selectedStudent = student;
+      student.classList.add("selected");
+    }
+
+    function placeStudentInSeat(student, seat) {
+      renderSeatNumber(seat);
+      seat.appendChild(student);
+      student.style.background = getComputedStyle(seat).backgroundColor;
+      updateSeatLockState(seat);
+    }
+
+    function moveStudentToList(student) {
+      if (!student) {
+        return;
+      }
+
+      const originSeat = student.closest(".seat");
+
+      if (originSeat) {
+        renderSeatNumber(originSeat);
+      }
+
+      if (isStudentLocked(student)) {
+        setStudentLocked(student, false);
+      }
+
+      student.style.background = "white";
+      studentsDiv.appendChild(student);
+    }
+
+    function sortStudents() {
+      const students = [...studentsDiv.querySelectorAll(".student")];
+
+      students.sort((left, right) =>
+        left.textContent.trim().localeCompare(right.textContent.trim(), "nb", {
+          sensitivity: "base"
+        })
+      );
+
+      students.forEach(student => studentsDiv.appendChild(student));
+    }
+
+    function saveSeating() {
+      const seating = {};
+      const lockedStudents = [];
+
+      classroom.querySelectorAll(".seat").forEach(seat => {
+        const student = getSeatStudent(seat);
+
+        if (student) {
+          seating[seat.dataset.seat] = student.id;
+
+          if (isStudentLocked(student)) {
+            lockedStudents.push(student.id);
+          }
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEYS.seating, JSON.stringify(seating));
+      localStorage.setItem(STORAGE_KEYS.lockedStudents, JSON.stringify(lockedStudents));
+    }
+
+    function loadSeating() {
+      const seating = readSavedSeating();
+
+      Object.keys(seating).forEach(seatId => {
+        const seat = findSeat(seatId);
+        const student = document.getElementById(seating[seatId]);
+
+        if (seat && student) {
+          placeStudentInSeat(student, seat);
+        }
+      });
+    }
+
+    function createSeatElement(code) {
+      const seat = document.createElement("div");
+
+      seat.className = `seat ${code[0]}`;
+      seat.style.gridArea = code;
+      seat.dataset.seat = code;
+      renderSeatNumber(seat);
+
+      seat.addEventListener("dragover", event => {
+        event.preventDefault();
+      });
+
+      seat.addEventListener("drop", event => {
+        event.preventDefault();
+
+        const draggedStudent = document.getElementById(event.dataTransfer.getData("text"));
+
+        if (!draggedStudent) {
+          return;
+        }
+
+        recordUndoState();
+
+        const originSeat = draggedStudent.closest(".seat");
+        const currentStudent = getSeatStudent(seat);
+
+        if (currentStudent && currentStudent !== draggedStudent) {
+          if (originSeat) {
+            placeStudentInSeat(currentStudent, originSeat);
+          } else {
+            moveStudentToList(currentStudent);
+            sortStudents();
+          }
+        } else if (originSeat && originSeat !== seat) {
+          renderSeatNumber(originSeat);
+        }
+
+        placeStudentInSeat(draggedStudent, seat);
+        clearSelectedStudent();
+        saveSeating();
+      });
+
+      seat.addEventListener("click", () => {
+        if (!selectedStudent || getSeatStudent(seat)) {
+          return;
+        }
+
+        recordUndoState();
+        placeStudentInSeat(selectedStudent, seat);
+        clearSelectedStudent();
+        saveSeating();
+      });
+
+      return seat;
+    }
+
+    function createTeacherDesk() {
+      const teacherDesk = document.createElement("div");
+
+      teacherDesk.className = "teacher-desk";
+      teacherDesk.textContent = DEFAULT_TEACHER_LABEL;
+
+      return teacherDesk;
+    }
+
+    function createStudentCard(name, index) {
+      const student = document.createElement("div");
+
+      student.className = "student";
+      student.id = `student${index + 1}`;
+      student.textContent = name;
+      student.draggable = true;
+      student.dataset.locked = "false";
+
+      student.addEventListener("dragstart", event => {
+        event.dataTransfer.setData("text", student.id);
+        studentsDiv.classList.add("drag-over");
+      });
+
+      student.addEventListener("dragend", () => {
+        studentsDiv.classList.remove("drag-over");
+      });
+
+      student.addEventListener("click", () => {
+        selectStudent(student);
+      });
+
+      student.addEventListener("dblclick", () => {
+        if (!student.closest(".seat")) {
+          return;
+        }
+
+        recordUndoState();
+        setStudentLocked(student, !isStudentLocked(student));
+        saveSeating();
+      });
+
+      return student;
+    }
+
+    function buildClassroom() {
+      classroom.innerHTML = "";
+
+      SEAT_CODES.forEach(code => {
+        classroom.appendChild(createSeatElement(code));
+      });
+
+      classroom.appendChild(createTeacherDesk());
+      updateClassroomTransform();
+    }
+
+    function buildStudents() {
+      studentsDiv.innerHTML = "";
+
+      const lockedStudentIds = new Set(readSavedLockedStudents());
+
+      readSavedStudentNames().forEach((name, index) => {
+        const student = createStudentCard(name, index);
+
+        if (lockedStudentIds.has(student.id)) {
+          setStudentLocked(student, true);
+        }
+
+        studentsDiv.appendChild(student);
+      });
+
+      sortStudents();
+    }
+
+    function randomSeats() {
+      recordUndoState();
+
+      const seats = [...classroom.querySelectorAll(".seat")];
+      const lockedSeatIds = new Set();
+      const lockedSeatAssignments = new Map();
+
+      seats.forEach(seat => {
+        const student = getSeatStudent(seat);
+
+        if (!student) {
+          renderSeatNumber(seat);
+          return;
+        }
+
+        if (isStudentLocked(student)) {
+          lockedSeatIds.add(seat.dataset.seat);
+          lockedSeatAssignments.set(seat.dataset.seat, student);
+          updateSeatLockState(seat);
+          return;
+        }
+
+        moveStudentToList(student);
+        renderSeatNumber(seat);
+      });
+
+      const studentsToPlace = [...studentsDiv.querySelectorAll(".student")];
+      const availableSeatIds = seats
+        .filter(seat => !lockedSeatIds.has(seat.dataset.seat))
+        .map(seat => seat.dataset.seat);
+      const seatIdsToFill = chooseSeatIdsToFill(availableSeatIds, studentsToPlace.length);
+      const seatPlan = createBiasedSeatPlan(studentsToPlace, seatIdsToFill, lockedSeatAssignments);
+
+      seatIdsToFill.forEach(seatId => {
+        const student = seatPlan.get(seatId);
+
+        if (student) {
+          placeStudentInSeat(student, findSeat(seatId));
+        }
+      });
+
+      sortStudents();
+      clearSelectedStudent();
+      saveSeating();
+    }
+
+    function resetSeats() {
+      recordUndoState();
+
+      document.querySelectorAll(".student").forEach(student => {
+        moveStudentToList(student);
+      });
+
+      sortStudents();
+      clearSelectedStudent();
+      saveSeating();
+    }
+
+    function printClassroom() {
+      window.print();
+    }
+
+    function getDownloadTimestamp() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+
+      return `${year}-${month}-${day}_${hours}-${minutes}`;
+    }
+
+    function createDownloadFilename(baseName, extension) {
+      return `${baseName}-${getDownloadTimestamp()}.${extension}`;
+    }
+
+    function downloadBlob(blob, filename) {
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+
+      link.href = url;
+      link.download = filename;
+      link.click();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function buildExportPage() {
+      const exportPage = document.createElement("div");
+      const exportTitle = document.createElement("h1");
+      const exportSubtitle = document.createElement("p");
+      const exportStage = document.createElement("div");
+      const classroomClone = classroom.cloneNode(true);
+
+      exportPage.className = "export-page";
+      exportPage.setAttribute("aria-hidden", "true");
+
+      exportTitle.className = "export-title";
+      exportTitle.textContent = classTitle.textContent;
+
+      exportSubtitle.className = "export-subtitle";
+      exportSubtitle.textContent = weekDisplay.textContent;
+
+      exportStage.className = "export-stage";
+
+      classroomClone.removeAttribute("id");
+      classroomClone.classList.add("export-classroom");
+      classroomClone.style.transform = "";
+
+      classroomClone.querySelectorAll(".selected").forEach(student => {
+        student.classList.remove("selected");
+      });
+
+      exportStage.appendChild(classroomClone);
+      exportPage.appendChild(exportTitle);
+
+      if (!weekDisplay.hidden) {
+        exportPage.appendChild(exportSubtitle);
+      }
+
+      exportPage.appendChild(exportStage);
+      document.body.appendChild(exportPage);
+
+      return exportPage;
+    }
+
+    async function downloadPNG() {
+      const exportPage = buildExportPage();
+
+      try {
+        const canvas = await html2canvas(exportPage, {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          windowWidth: 1123,
+          windowHeight: 794
+        });
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+
+        if (!blob) {
+          throw new Error("PNG export failed");
+        }
+
+        downloadBlob(blob, createDownloadFilename("klasseromplan-a4", "png"));
+      } catch (error) {
+        alert("Kunne ikke lage A4-bildet. Pr\u00F8v igjen.");
+      } finally {
+        exportPage.remove();
+      }
+    }
+
+    function exportLayout() {
+      const layout = {};
+
+      classroom.querySelectorAll(".seat").forEach(seat => {
+        const student = getSeatStudent(seat);
+
+        if (student) {
+          layout[seat.dataset.seat] = student.textContent.trim();
+        }
+      });
+
+      const blob = new Blob([JSON.stringify(layout)], { type: "application/json" });
+      downloadBlob(blob, createDownloadFilename("klasseromplan", "json"));
+    }
+
+    function importLayout(event) {
+      const file = event.target.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = loadEvent => {
+        try {
+          const layout = JSON.parse(loadEvent.target.result);
+
+          recordUndoState();
+          resetSeats();
+
+          Object.entries(layout).forEach(([seatId, studentName]) => {
+            const seat = findSeat(seatId);
+            const student = [...document.querySelectorAll(".student")].find(
+              card => card.textContent.trim() === studentName
+            );
+
+            if (seat && student) {
+              placeStudentInSeat(student, seat);
+            }
+          });
+
+          saveSeating();
+        } catch (error) {
+          alert("Kunne ikke importere oppsettet. Sjekk at JSON-filen er gyldig.");
+        }
+
+        event.target.value = "";
+      };
+
+      reader.readAsText(file);
+    }
+
+    function handleStudentsDropArea() {
+      studentsDiv.addEventListener("dragover", event => {
+        event.preventDefault();
+        studentsDiv.classList.add("drag-over");
+      });
+
+      studentsDiv.addEventListener("dragleave", event => {
+        if (event.target === studentsDiv) {
+          studentsDiv.classList.remove("drag-over");
+        }
+      });
+
+      studentsDiv.addEventListener("drop", event => {
+        event.preventDefault();
+        studentsDiv.classList.remove("drag-over");
+
+        const student = document.getElementById(event.dataTransfer.getData("text"));
+
+        if (!student) {
+          return;
+        }
+
+        recordUndoState();
+        moveStudentToList(student);
+        sortStudents();
+        clearSelectedStudent();
+        saveSeating();
+      });
+    }
+
+    function handleZoom() {
+      document.addEventListener(
+        "wheel",
+        event => {
+          if (!event.ctrlKey) {
+            return;
+          }
+
+          event.preventDefault();
+
+          zoom += event.deltaY * -0.001;
+          zoom = Math.min(Math.max(0.5, zoom), 2);
+
+          updateClassroomTransform();
+        },
+        { passive: false }
+      );
+    }
+
+    function bindControls() {
+      document.getElementById("randomButton").addEventListener("click", randomSeats);
+      document.getElementById("resetButton").addEventListener("click", resetSeats);
+      undoButton.addEventListener("click", undoLastAction);
+      document.getElementById("downloadButton").addEventListener("click", downloadPNG);
+      document.getElementById("printButton").addEventListener("click", printClassroom);
+      document.getElementById("exportButton").addEventListener("click", exportLayout);
+      document.getElementById("importButton").addEventListener("click", () => importFileInput.click());
+
+      importFileInput.addEventListener("change", importLayout);
+      teacherViewToggle.addEventListener("change", toggleTeacherView);
+      weekInput.addEventListener("input", updateWeekDisplay);
+    }
+
+    weekInput.value = readSavedWeekLabel();
+    updateWeekDisplay();
+    buildClassroom();
+    buildStudents();
+    bindControls();
+    handleStudentsDropArea();
+    handleZoom();
+    loadSeating();
+    updateUndoButton();
+  </script>
 </body>
 </html>
