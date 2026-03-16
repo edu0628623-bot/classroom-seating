@@ -664,7 +664,7 @@ sortStudents()
 
 document.querySelectorAll(".seat").forEach(seat=>{
 
-seat.innerText=seat.dataset.seat
+seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
 
 })
 
@@ -881,6 +881,8 @@ let student=[...document.querySelectorAll(".student")]
 .find(s=>s.innerText===seating[seatId])
 
 if(seat && student){
+
+seat.innerHTML='<span class="seat-number">'+seat.dataset.seat+'</span>'
 
 seat.appendChild(student)
 
